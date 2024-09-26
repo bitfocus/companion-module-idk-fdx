@@ -1,0 +1,23 @@
+{
+	"name": "idk-fdx",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"format": "prettier -w .",
+		"lint:raw": "eslint --ext .ts --ext .js --ignore-pattern dist --ignore-pattern pkg",
+		"lint": "yarn lint:raw ."
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@companion-module/base": "~1.10.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-idk-fdx.git"
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^2.0.0",
+		"prettier": "^3.3.2"
+	}
+}
