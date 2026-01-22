@@ -2,6 +2,10 @@ module.exports = {
 	DATA: {
 		outputs: {
 			//16 outputs for default
+			0: {
+				currentVideoInput: 1,
+				audioMute: 1,
+			},
 			1: {
 				currentVideoInput: 1,
 				audioMute: 1,
@@ -71,6 +75,7 @@ module.exports = {
 
 	CHOICES_INPUTS: [
 		//16 inputs for default
+		{ id: 0, label: 'OFF' },
 		{ id: 1, label: 'Input 1' },
 		{ id: 2, label: 'Input 2' },
 		{ id: 3, label: 'Input 3' },
@@ -91,6 +96,7 @@ module.exports = {
 
 	CHOICES_OUTPUTS: [
 		//16 outputs for default
+		{ id: 0, label: 'All' },
 		{ id: 1, label: 'Output 1' },
 		{ id: 2, label: 'Output 2' },
 		{ id: 3, label: 'Output 3' },

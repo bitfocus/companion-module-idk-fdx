@@ -57,7 +57,7 @@ module.exports = {
 
 	getData() {
 		let self = this
-
+		self.sendCommand('@GIV')
 		self.sendCommand('@GSW') //get io channel status
 		self.sendCommand('@GAM') //get audio mute status
 	},
@@ -90,11 +90,36 @@ module.exports = {
 
 			return
 		}
-		self.DATA = self.DATA || {};  
+		self.DATA = self.DATA || {};
 		if (!Array.isArray(self.DATA.outputs)) self.DATA.outputs = []
 		let variableObj = {}
 
 		switch (sections[0]) {
+			case '@GIV':
+			case '@GIV': {
+				// 例: @GIV,FDX-S16U,02.00.00,12,16
+				const model = sections[1]?.trim()
+				const { inputs, outputs } = self.getMaxIoByModel(model)
+
+
+				// Input choices（0=All を入れる）
+				self.CHOICES_INPUTS = [{ id: 0, label: 'OFF' }]
+				for (let i = 1; i <= inputs; i++) {
+					self.CHOICES_INPUTS.push({ id: i, label: `Input ${i}` })
+				}
+
+				// Output choices（All outputs が要るなら 0 を入れる）
+				self.CHOICES_OUTPUTS = [{ id: 0, label: 'All' }]
+				for (let i = 1; i <= outputs; i++) {
+					self.CHOICES_OUTPUTS.push({ id: i, label: `Output ${i}` })
+				}
+
+				self.initActions()
+				self.initFeedbacks()
+				self.initVariables()
+
+			}
+				break
 			case '@GSW':
 				//the number of sections is the number of outputs, and the value of the section is the input assigned to that output number
 				//self.DATA.outputs = {} //clear the outputs
@@ -105,24 +130,12 @@ module.exports = {
 					variableObj[`output_${i}_video_input`] = input
 				}
 
-				//if the number of outputs is not equal to the number of CHOICES_OUTPUTS, update the CHOICES_OUTPUTS
-				if (sections.length - 1 !== self.CHOICES_OUTPUTS.length) {
-					self.CHOICES_OUTPUTS = []
-					for (let i = 1; i < sections.length; i++) {
-						self.CHOICES_OUTPUTS.push({ id: i, label: `Output ${i}` })
-					}
-					self.initActions() //reinitialize actions
-					self.initFeedbacks() //reinitialize feedbacks
-					self.initVariables() //reinitialize variables
-					self.log('debug', `outputs isArray=${Array.isArray(self.DATA?.outputs)} len=${self.DATA?.outputs?.length}`)
-
-				}
 				break
 			case '@GAM':
 				//the number of sections is the number of outputs, and the value of the section is the mute status of that output number
 				for (let i = 1; i < sections.length; i++) {
 					let mute = parseInt(sections[i])
-					   if (!self.DATA.outputs[i]) self.DATA.outputs[i] = {}
+					if (!self.DATA.outputs[i]) self.DATA.outputs[i] = {}
 					self.DATA.outputs[i].audioMute = mute
 					variableObj[`output_${i}_audio_mute`] = mute === 0 ? 'Muted' : 'Unmuted'
 				}
@@ -174,4 +187,26 @@ module.exports = {
 
 		console.log(self.commandQueue)
 	},
+	// Determine maximum I/O channels based on FDX model suffix
+	// e.g. "FDX-S16U" -> "S16U" -> max inputs/outputs = 16
+	getMaxIoByModel(model) {
+		const m = (model || '').toUpperCase()
+
+		const suffix = m.split('FDX-')[1] || m // 雑に
+		// Extract model suffix from full model string
+		// Example: "FDX-S16U" -> "S16U"
+
+		switch (suffix) {
+			case 'S64U':
+				return { inputs: 64, outputs: 64 }
+			case 'S32U':
+				return { inputs: 32, outputs: 32 }
+			case 'S16U':
+				return { inputs: 16, outputs: 16 }
+			case 'S08U':
+				return { inputs: 8, outputs: 8 }
+			default:
+				return { inputs: 16, outputs: 16 } //default
+		}
+	}
 }
