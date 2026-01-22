@@ -59,7 +59,7 @@ module.exports = {
 		let self = this
 
 		self.sendCommand('@GSW') //get io channel status
-		self.sendCommand('@GAM,0') //get audio mute status
+		self.sendCommand('@GAM') //get audio mute status
 	},
 
 	async processData(data) {
@@ -90,15 +90,17 @@ module.exports = {
 
 			return
 		}
-
+		self.DATA = self.DATA || {};  
+		if (!Array.isArray(self.DATA.outputs)) self.DATA.outputs = []
 		let variableObj = {}
 
 		switch (sections[0]) {
 			case '@GSW':
 				//the number of sections is the number of outputs, and the value of the section is the input assigned to that output number
-				self.DATA.outputs = {} //clear the outputs
+				//self.DATA.outputs = {} //clear the outputs
 				for (let i = 1; i < sections.length; i++) {
 					let input = parseInt(sections[i])
+					if (!self.DATA.outputs[i]) self.DATA.outputs[i] = {}
 					self.DATA.outputs[i].currentVideoInput = input
 					variableObj[`output_${i}_video_input`] = input
 				}
@@ -112,12 +114,15 @@ module.exports = {
 					self.initActions() //reinitialize actions
 					self.initFeedbacks() //reinitialize feedbacks
 					self.initVariables() //reinitialize variables
+					self.log('debug', `outputs isArray=${Array.isArray(self.DATA?.outputs)} len=${self.DATA?.outputs?.length}`)
+
 				}
 				break
 			case '@GAM':
 				//the number of sections is the number of outputs, and the value of the section is the mute status of that output number
 				for (let i = 1; i < sections.length; i++) {
 					let mute = parseInt(sections[i])
+					   if (!self.DATA.outputs[i]) self.DATA.outputs[i] = {}
 					self.DATA.outputs[i].audioMute = mute
 					variableObj[`output_${i}_audio_mute`] = mute === 0 ? 'Muted' : 'Unmuted'
 				}
@@ -130,6 +135,7 @@ module.exports = {
 
 	async sendCommand(command) {
 		let self = this
+
 
 		if (self.socket && self.socket.isConnected) {
 			if (self.config.verbose) {
